@@ -1,0 +1,23 @@
+{
+  "name": "redshirt-prototype",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "move-phaser": "cp ./node_modules/phaser/build/phaser.js ./game/assets/js/lib/phaser.js",
+    "move-easystar": "cp ./node_modules/easystarjs/bin/*min.js ./game/assets/js/lib/easystar.min.js",
+    "start-dev": "npm run move-phaser && npm run move-easystar && browser-sync start -s './game' -f './game'",
+    "start": "npm run move-phaser && http-server ./game"
+  },
+  "author": "Spencer Apple (http://spencerapple.com/)",
+  "license": "MIT",
+  "dependencies": {
+    "easystarjs": "^0.3.1",
+    "http-server": "^0.9.0",
+    "phaser": "^2.6.2"
+  },
+  "devDependencies": {
+    "browser-sync": "^2.11.1"
+  }
+}
