@@ -23,5 +23,6 @@ Redshirts.config = {
      */
     debug: {
         stateHooks: false,
+        grid: true,
     }
 };
