@@ -7,6 +7,8 @@ Redshirts.states.Ship = function(game) {
                                                                      this, 
                                                                      'assets/levels/ship.json', 
                                                                      'Tile Layer 1');
+
+    this.officerController = new Redshirts.controllers.OfficerController(this.game, this, 3);
 };
 
 Redshirts.states.Ship.prototype = {
@@ -29,6 +31,9 @@ Redshirts.states.Ship.prototype = {
 
         this.game.camera.follow(this.player.sprite, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
         this.game.input.onDown.add(this.pathTo, this);
+
+        // create officers
+        const num = 3;
     },
 
     pathTo: function (e) {

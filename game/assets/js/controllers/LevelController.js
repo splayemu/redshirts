@@ -57,6 +57,7 @@ Redshirts.controllers.LevelController.prototype = {
         // debug textures
         this.debugPathEndTexture = Redshirts.debugGraphics.create(this.game, 0xFF0000, this.tileWidth, this.tileHeight);
         this.debugGridTexture = Redshirts.debugGraphics.create(this.game, 0xFFFF00, this.tileWidth, this.tileHeight);
+        this.debugSprite = null;
 
         this._loadGrid();
         this._initializePathfinding();
@@ -69,14 +70,19 @@ Redshirts.controllers.LevelController.prototype = {
         const endingY = this.tileY(endYInPx);
 
         if (Redshirts.config.debug.grid) {
-            const debugSprite = this.game.add.sprite(endingX * this.tileWidth, endingY * this.tileHeight, this.debugPathEndTexture);
+            if (this.debugSprite) this.debugSprite.destroy();
+            this.debugSprite = this.game.add.sprite(endingX * this.tileWidth, endingY * this.tileHeight, this.debugPathEndTexture);
         }
 
         // it returns null if the path is on an inaccessible block, but doesn't ever call if it's blocked off
         this.easystar.findPath(startingX, startingY, endingX, endingY, (path) => {
             if (path === null) {
-                alert("path is null");
+                Redshirts.debug('grid', `${entity.sprite.key} can't path to ${endingX}, ${endingY}`);
             } else {
+                //console.groupCollapsed('player');
+                //console.log('new path found', entity.sprite.x, entity.sprite.y);
+                //console.log('first location', path[0]);
+                //console.groupEnd('player');
                 entity.path = path.map((loc) => {
                     loc.x *= this.tileWidth;
                     loc.y *= this.tileHeight;
@@ -90,6 +96,6 @@ Redshirts.controllers.LevelController.prototype = {
         this.easystar = new EasyStar.js();
         this.easystar.setGrid(this.grid);
         this.easystar.setAcceptableTiles([0]);
-        this.easystar.setIterationsPerCalculation(1);
+        this.easystar.setIterationsPerCalculation(100);
     },
 }

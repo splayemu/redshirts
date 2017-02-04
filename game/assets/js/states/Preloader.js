@@ -7,6 +7,8 @@ Redshirts.states.Preloader.prototype = {
     preload: function () {
         Redshirts.debug('stateHooks', 'Preloader.preload');
         this.game.load.spritesheet('dude', 'assets/img/dude.png', 32, 48);
+        //opengameart.org/content/one-more-lpc-alternate-character
+        this.game.load.spritesheet('betty', 'assets/spritesheets/betty.png', 32, 32, 8, 8);
         this.game.load.spritesheet('background', 'assets/spritesheets/background.png', 32, 32, 2);
 
     },
