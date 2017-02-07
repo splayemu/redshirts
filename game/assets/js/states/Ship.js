@@ -30,22 +30,19 @@ Redshirts.states.Ship.prototype = {
         this.player = new Redshirts.entities.player(this.game, this, playerX, playerY);
 
         this.game.camera.follow(this.player.sprite, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
-        this.game.input.onDown.add(this.pathTo, this);
+
+        // click events
+        this.game.input.onDown.add(this.player.pathTo, this.player);
 
         // create officers
-        const num = 3;
-    },
-
-    pathTo: function (e) {
-        const x = this.game.input.mousePointer.x + this.game.camera.x;
-        const y = this.game.input.mousePointer.y + this.game.camera.y;
-        console.log(e, 'mousedown', x, y);
-        this.levelController.addPath(this.player, x, y);
+        this.officerController.spawn();
+        this.officerController.addPatrol();
     },
 
     update: function() {
         this.levelController.easystar.calculate();
         this.player.update();
+        this.officerController.update();
 
     },
 

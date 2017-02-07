@@ -47,6 +47,25 @@ Redshirts.controllers.LevelController.prototype = {
     tileY: function (yInPx) {
         return Math.floor(yInPx / this.tileHeight);
     },
+
+
+    convertTile: function (loc) {
+        return {
+            x: this.tileX(loc.x),
+            y: this.tileY(loc.y),
+        }
+    },
+
+    convertPx: function (loc) {
+        return {
+            x: loc.x * this.tileWidth,
+            y: loc.y * this.tileHeight
+        };
+    },
+
+    pxRound: function (loc) {
+        return this.convertPx(this.convertTile(loc));
+    },
     
     createGround: function () {
         // draws the img
@@ -55,24 +74,17 @@ Redshirts.controllers.LevelController.prototype = {
         this.map.createLayer(this.layerName);
 
         // debug textures
-        this.debugPathEndTexture = Redshirts.debugGraphics.create(this.game, 0xFF0000, this.tileWidth, this.tileHeight);
         this.debugGridTexture = Redshirts.debugGraphics.create(this.game, 0xFFFF00, this.tileWidth, this.tileHeight);
-        this.debugSprite = null;
 
         this._loadGrid();
         this._initializePathfinding();
     },
 
-    addPath: function (entity, endXInPx, endYInPx) {
+    addPath: function (entity, loc, callback) {
         const startingX = this.tileX(entity.sprite.x);
         const startingY = this.tileY(entity.sprite.y);
-        const endingX = this.tileX(endXInPx);
-        const endingY = this.tileY(endYInPx);
-
-        if (Redshirts.config.debug.grid) {
-            if (this.debugSprite) this.debugSprite.destroy();
-            this.debugSprite = this.game.add.sprite(endingX * this.tileWidth, endingY * this.tileHeight, this.debugPathEndTexture);
-        }
+        const endingX = this.tileX(loc.x);
+        const endingY = this.tileY(loc.y);
 
         // it returns null if the path is on an inaccessible block, but doesn't ever call if it's blocked off
         this.easystar.findPath(startingX, startingY, endingX, endingY, (path) => {
@@ -83,11 +95,12 @@ Redshirts.controllers.LevelController.prototype = {
                 //console.log('new path found', entity.sprite.x, entity.sprite.y);
                 //console.log('first location', path[0]);
                 //console.groupEnd('player');
-                entity.path = path.map((loc) => {
+
+                callback(path.map((loc) => {
                     loc.x *= this.tileWidth;
                     loc.y *= this.tileHeight;
                     return loc;
-                });
+                }));
             }
         });
     },

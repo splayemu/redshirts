@@ -1,4 +1,4 @@
-Redshirts.entities.officer = function (game, level, startingX, startingY) {
+Redshirts.entities.officer = function (game, level, sprite, startingX, startingY) {
     this.game = game;
     this.level = level;
 
@@ -10,20 +10,31 @@ Redshirts.entities.officer = function (game, level, startingX, startingY) {
     this.tween = null;
 
     // The player and its settings
-    this.sprite = this.game.add.sprite(this.startingX, this.startingY, 'betty');
+    this.sprite = this.game.add.sprite(this.startingX, this.startingY, sprite);
 
-    //  Our two animations, walking left and right.
-    // idle: 0 - 179, casting: 180 -239
-    //var idleFrames = Array.apply(null, Array(180)).map(function (_, i) {return i;});
-    //var castingFrames = Array.apply(null, Array(60)).map(function (_, i) {return i + 180;});
+    this.debugColor = 0x4286F4;
+    this.debugPathEndTexture = Redshirts.debugGraphics.createCircle(this.game, 
+                                                                    this.debugColor, 
+                                                                    this.level.levelController.tileWidth / 2); 
 
-    //this.sprite.animations.add('idle', idleFrames, 40, true);
-    //this.sprite.animations.add('casting', castingFrames, 30, true);
+    this.pathSprites = [];
+    this.debugSprite = null;
 
+    this.queue = [];
 }
 
 Redshirts.entities.officer.prototype = {
     update: function () {
+        // dequeue patrol item
+        if (this.queue.length > 0) {
+            this.dequeuePatrol();
+        }
+        // start tweening down the path
+        // if nothing to do, idle
+        this._move();
+    },
+
+    _move: function () {
         if (this.path !== null && this.path.length > 0) {
             if (this.tween === null) {
                 const loc = this.path.shift();
@@ -33,5 +44,29 @@ Redshirts.entities.officer.prototype = {
         } else if (this.path !== null && this.path.length === 0) {
             this.path = null;
         }
+    },
+
+    
+    dequeuePatrol: function () {
+        this.path = this.queue.pop();
+        if (Redshirts.config.debug.officers) {
+            const pathSprite = this.pathSprites.pop();
+            // could change or animate sprite to be different
+
+        }
+
+        Redshirts.debug('officers', `dequeuePatrol ${this.path}`);
+    },
+
+    enqueuePatrol: function (loc) {
+        Redshirts.debug('officers', `enqueuePatrol ${loc.x}, ${loc.y}`);
+        if (Redshirts.config.debug.officers) {
+            this.pathSprites.push(this.game.add.sprite(loc.x, loc.y, this.debugPathEndTexture));
+        }
+
+        this.level.levelController.addPath(this, loc, (path) => {
+            console.log('enqueue callback', this);
+            this.queue.push(path);
+        });
     },
 }

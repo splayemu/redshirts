@@ -9,6 +9,13 @@ Redshirts.entities.player = function (game, level, startingX, startingY) {
     this.path = null;
     this.tween = null;
 
+    this.debugColor = 0xFF0000;
+    this.debugPathEndTexture = Redshirts.debugGraphics.create(this.game, 
+                                                              this.debugColor, 
+                                                              this.level.levelController.tileWidth, 
+                                                              this.level.levelController.tileHeight);
+    this.debugSprite = null;
+
     // The player and its settings
     this.sprite = this.game.add.sprite(this.startingX, this.startingY, 'betty');
 
@@ -33,5 +40,23 @@ Redshirts.entities.player.prototype = {
         } else if (this.path !== null && this.path.length === 0) {
             this.path = null;
         }
+    },
+
+    pathTo: function (e) {
+        const x = this.game.input.mousePointer.x + this.game.camera.x;
+        const y = this.game.input.mousePointer.y + this.game.camera.y;
+        console.log(Redshirts.config.debug.player, this, 'mousedown', x, y);
+
+        const loc = this.level.levelController.pxRound({ x: x, y: y });
+ 
+        if (Redshirts.config.debug.player) {
+            if (this.debugSprite) this.debugSprite.destroy();
+            console.log('creating debugSprite');
+            this.debugSprite = this.game.add.sprite(loc.x, loc.y, this.debugPathEndTexture);
+        }
+
+        this.level.levelController.addPath(this, loc, (path) => {
+            this.path = path;
+        });
     },
 }
