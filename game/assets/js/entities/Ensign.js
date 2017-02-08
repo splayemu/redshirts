@@ -1,4 +1,4 @@
-Redshirts.entities.player = function (game, level, startingX, startingY) {
+Redshirts.entities.Ensign = function (game, level, startingX, startingY) {
     this.game = game;
     this.level = level;
 
@@ -29,7 +29,7 @@ Redshirts.entities.player = function (game, level, startingX, startingY) {
 
 }
 
-Redshirts.entities.player.prototype = {
+Redshirts.entities.Ensign.prototype = {
     update: function () {
         if (this.path !== null && this.path.length > 0) {
             if (this.tween === null) {

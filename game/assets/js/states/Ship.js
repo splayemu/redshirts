@@ -9,6 +9,7 @@ Redshirts.states.Ship = function(game) {
                                                                      'Tile Layer 1');
 
     this.officerController = new Redshirts.controllers.OfficerController(this.game, this, 3);
+    this.ensignController = new Redshirts.controllers.EnsignController(this.game, this, 1);
 };
 
 Redshirts.states.Ship.prototype = {
@@ -25,9 +26,8 @@ Redshirts.states.Ship.prototype = {
 
         this.game.world.setBounds(0, 0, 2000, 2000);
 
-        const playerX = this.levelController.tileWidth * 4;
-        const playerY = this.levelController.tileHeight * 10;
-        this.player = new Redshirts.entities.player(this.game, this, playerX, playerY);
+        this.ensignController.spawn();
+        this.player = this.ensignController.getPlayer();
 
         this.game.camera.follow(this.player.sprite, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
 
@@ -43,6 +43,7 @@ Redshirts.states.Ship.prototype = {
         this.levelController.easystar.calculate();
         this.player.update();
         this.officerController.update();
+        this.ensignController.update();
 
     },
 
