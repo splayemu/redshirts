@@ -5,7 +5,7 @@ Redshirts.controllers.LevelController = function (game, level, filename, layerNa
     this.layerName = layerName;
     this.levelID = 'ship';
     this.walls = 'walls';
-    this.json = 'wallsjson';
+    this.json = 'shipjson';
     this.tileWidth = 32;
     this.tileHeight = 32;
 }
@@ -17,6 +17,7 @@ Redshirts.controllers.LevelController.prototype = {
     },
 
     _loadGrid: function () {
+        // can also look for a tilelayer
         const layer = this.game.cache.getJSON(this.json).layers[0];
         const grid = [];
 
@@ -38,6 +39,29 @@ Redshirts.controllers.LevelController.prototype = {
         this.grid = grid;
         this.gridWidth = layer.width;
         this.gridHeight = layer.height;
+    },
+
+    _loadRooms: function () {
+        this.rooms = this.game.cache.getJSON(this.json).layers.filter((layer) => {
+            return layer.name === "rooms";
+        })[0].objects;
+
+        this.rooms.forEach((room) => {
+            room.midPoint = {
+                x: room.x + room.width / 2,
+                y: room.y + room.height / 2,
+            };
+        });
+
+        if (Redshirts.config.debug.grid) {
+            this.rooms.forEach((room) => {
+                const roomTexture = Redshirts.debugGraphics.create(this.game, 0xFFFF00, room.width, room.height);
+                this.game.add.sprite(room.x, room.y, roomTexture);
+
+                const style = { font: '18px Arial', fill: '#FFFFFF', align: 'left' };
+                this.game.add.text(room.x, room.y, room.name, style);
+            });
+        }
     },
 
     tileX: function (xInPx) {
@@ -77,19 +101,29 @@ Redshirts.controllers.LevelController.prototype = {
         this.debugGridTexture = Redshirts.debugGraphics.create(this.game, 0xFFFF00, this.tileWidth, this.tileHeight);
 
         this._loadGrid();
-        this._initializePathfinding();
+        this._loadRooms();
     },
 
-    addPath: function (entity, loc, callback) {
-        const startingX = this.tileX(entity.sprite.x);
-        const startingY = this.tileY(entity.sprite.y);
-        const endingX = this.tileX(loc.x);
-        const endingY = this.tileY(loc.y);
+
+    createPathfinding: function () {
+        const easystar = new EasyStar.js();
+        easystar.setGrid(this.grid);
+
+        // default to everything but the walls
+        easystar.setAcceptableTiles([0]);
+        easystar.setIterationsPerCalculation(100);
+
+        return easystar;
+    },
+
+    addPath: function (easystar, start, end, callback) {
+        const starting = this.convertTile(start);
+        const ending = this.convertTile(end);
 
         // it returns null if the path is on an inaccessible block, but doesn't ever call if it's blocked off
-        this.easystar.findPath(startingX, startingY, endingX, endingY, (path) => {
+        easystar.findPath(starting.x, starting.y, ending.x, ending.y, (path) => {
             if (path === null) {
-                Redshirts.debug('grid', `${entity.sprite.key} can't path to ${endingX}, ${endingY}`);
+                Redshirts.debug('grid', `${start.x}, ${start.y} can't path to ${ending.x}, ${ending.y}`);
             } else {
                 //console.groupCollapsed('player');
                 //console.log('new path found', entity.sprite.x, entity.sprite.y);
@@ -103,12 +137,5 @@ Redshirts.controllers.LevelController.prototype = {
                 }));
             }
         });
-    },
-
-    _initializePathfinding: function () {
-        this.easystar = new EasyStar.js();
-        this.easystar.setGrid(this.grid);
-        this.easystar.setAcceptableTiles([0]);
-        this.easystar.setIterationsPerCalculation(100);
     },
 }

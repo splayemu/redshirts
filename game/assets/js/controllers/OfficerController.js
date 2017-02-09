@@ -21,6 +21,7 @@ Redshirts.controllers.OfficerController.prototype = {
 
     // spawning
     spawn: function () {
+        this.easystar = this.level.levelController.createPathfinding();
         const officerGraphic = Redshirts.debugGraphics.create(this.game, 0xFF0000, 16, 16);
         this.officerLocations.forEach((loc) => {
             this.officers.push(new Redshirts.entities.officer(this.game, this.level, officerGraphic,
@@ -39,8 +40,25 @@ Redshirts.controllers.OfficerController.prototype = {
         });
     },
 
+    // mechanism for patrol
+    createPatrols: function () {
+        const rooms = this.level.levelController.rooms;
+        const officerStartingRoom = rooms.filter((room) => { return room.name === "bridge"; })[0];
+        const objectiveRoom = rooms.filter((room) => { return room.name === "lab"; })[0];
+        const otherRooms = rooms.filter((room) => {
+            return room.name !== "lab" && room.name !== "bridge";
+        });
+
+        // officers get a subset of rooms to patrol between
+        // they move through the path
+        // once they are finished they go and rerandom the patrol
+
+
+    },
+
     // start patrol
     update: function () {
+        this.easystar.calculate();
         this.officers.forEach((officer) => {
             officer.update();
         });

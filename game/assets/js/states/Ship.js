@@ -32,7 +32,7 @@ Redshirts.states.Ship.prototype = {
         this.game.camera.follow(this.player.sprite, Phaser.Camera.FOLLOW_LOCKON, 0.1, 0.1);
 
         // click events
-        this.game.input.onDown.add(this.player.pathTo, this.player);
+        this.game.input.onDown.add(this.ensignController.pathTo, this.ensignController);
 
         // create officers
         this.officerController.spawn();
@@ -40,7 +40,6 @@ Redshirts.states.Ship.prototype = {
     },
 
     update: function() {
-        this.levelController.easystar.calculate();
         this.player.update();
         this.officerController.update();
         this.ensignController.update();

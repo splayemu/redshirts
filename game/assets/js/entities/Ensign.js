@@ -18,15 +18,6 @@ Redshirts.entities.Ensign = function (game, level, startingX, startingY) {
 
     // The player and its settings
     this.sprite = this.game.add.sprite(this.startingX, this.startingY, 'betty');
-
-    //  Our two animations, walking left and right.
-    // idle: 0 - 179, casting: 180 -239
-    //var idleFrames = Array.apply(null, Array(180)).map(function (_, i) {return i;});
-    //var castingFrames = Array.apply(null, Array(60)).map(function (_, i) {return i + 180;});
-
-    //this.sprite.animations.add('idle', idleFrames, 40, true);
-    //this.sprite.animations.add('casting', castingFrames, 30, true);
-
 }
 
 Redshirts.entities.Ensign.prototype = {
@@ -40,23 +31,5 @@ Redshirts.entities.Ensign.prototype = {
         } else if (this.path !== null && this.path.length === 0) {
             this.path = null;
         }
-    },
-
-    pathTo: function (e) {
-        const x = this.game.input.mousePointer.x + this.game.camera.x;
-        const y = this.game.input.mousePointer.y + this.game.camera.y;
-        console.log(Redshirts.config.debug.player, this, 'mousedown', x, y);
-
-        const loc = this.level.levelController.pxRound({ x: x, y: y });
- 
-        if (Redshirts.config.debug.player) {
-            if (this.debugSprite) this.debugSprite.destroy();
-            console.log('creating debugSprite');
-            this.debugSprite = this.game.add.sprite(loc.x, loc.y, this.debugPathEndTexture);
-        }
-
-        this.level.levelController.addPath(this, loc, (path) => {
-            this.path = path;
-        });
     },
 }

@@ -65,7 +65,7 @@ Redshirts.entities.officer.prototype = {
         }
 
         // not sure if this guarentees the order of the patrol
-        this.level.levelController.addPath(this, loc, (path) => {
+        this.level.levelController.addPath(this.level.officerController.easystar, this.sprite, loc, (path) => {
             this.queue.push(path);
         });
     },
