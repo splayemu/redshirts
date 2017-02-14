@@ -4,5 +4,6 @@ var Redshirts = {
         ui: {}
     },
     controllers: {},
+    events: {},
     config: null
 };

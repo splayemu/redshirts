@@ -6,7 +6,7 @@ Redshirts.entities.officer = function (game, level, sprite, startingX, startingY
     this.startingX = startingX;
     this.startingY = startingY;
 
-    this.path = null;
+    this.path = [];
     this.tween = null;
 
     // The player and its settings
@@ -19,54 +19,75 @@ Redshirts.entities.officer = function (game, level, sprite, startingX, startingY
 
     this.pathSprites = [];
     this.debugSprite = null;
+    this.waitTime = 100;
+    this.waiting = 0;
 
-    this.queue = [];
+    this.patrolQueue = [];
 }
 
 Redshirts.entities.officer.prototype = {
     update: function () {
-        // dequeue patrol item
-        if (this.queue.length > 0) {
-            this.dequeuePatrol();
+        // depatrolQueue patrol item
+
+        if (this.waiting) {
+            this.waiting -= 1;
+        } else {
+            // if nothing to do, idle
+            this._move();
         }
-        // start tweening down the path
-        // if nothing to do, idle
-        this._move();
     },
 
     _move: function () {
-        if (this.path !== null && this.path.length > 0) {
+        if (this.path.length > 0) {
             if (this.tween === null) {
                 const loc = this.path.shift();
                 this.tween = this.game.add.tween(this.sprite).to(loc, this.speed, null, true);
                 this.tween.onComplete.add((e) => { this.tween = null; }, this);
             } 
-        } else if (this.path !== null && this.path.length === 0) {
-            this.path = null;
+        } else if (this.path.length === 0) {
+            const nextRoom = this.peekPatrol();
+            if (nextRoom) {
+                if (nextRoom.path) this.dequeuePatrol();
+            } else {
+                Redshirts.events.officerIdle.dispatch(this);
+            }
+
+            this.waiting = this.waitTime;
         }
     },
 
+    peekPatrol: function () {
+        if (this.patrolQueue.length > 0) {
+            return this.patrolQueue[0];
+        } else {
+            return null;
+        }
+    },
     
     dequeuePatrol: function () {
-        this.path = this.queue.pop();
+        const nextRoom = this.patrolQueue.shift();
+        this.path = nextRoom.path;
         if (Redshirts.config.debug.officers) {
-            const pathSprite = this.pathSprites.pop();
+            const pathSprite = this.pathSprites.shift();
             // could change or animate sprite to be different
 
         }
 
-        Redshirts.debug('officers', `dequeuePatrol ${this.path}`);
+        Redshirts.debug('officers', `depatrolQueuePatrol ${nextRoom.name}: ${this.path[this.path.length - 1].x}, ${this.path[this.path.length - 1].y}`);
     },
 
-    enqueuePatrol: function (loc) {
-        Redshirts.debug('officers', `enqueuePatrol ${loc.x}, ${loc.y}`);
+    enqueuePatrol: function (room, prevLoc) {
+        const loc = this.level.levelController.pxRound(prevLoc || this.sprite); 
+
+        Redshirts.debug('officers', `enpatrolQueueRoom ${room.name} starting at (${loc.x}, ${loc.y})`);
         if (Redshirts.config.debug.officers) {
-            this.pathSprites.push(this.game.add.sprite(loc.x, loc.y, this.debugPathEndTexture));
+            this.pathSprites.push(this.game.add.sprite(room.midPoint.x, room.midPoint.y, this.debugPathEndTexture));
         }
 
-        // not sure if this guarentees the order of the patrol
-        this.level.levelController.addPath(this.level.officerController.easystar, this.sprite, loc, (path) => {
-            this.queue.push(path);
+        this.patrolQueue.push(room);
+
+        this.level.levelController.addPath(this.level.officerController.easystar, loc, room.midPoint, (path) => {
+            room.path = path;
         });
     },
 }

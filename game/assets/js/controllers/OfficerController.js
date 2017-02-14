@@ -4,16 +4,8 @@ Redshirts.controllers.OfficerController = function (game, level, num) {
     this.num = num;
 
     this.officers = [];
-    this.officerLocations = [
-        {
-            'x': 0,
-            'y': 0,
-        },
-        {
-            'x': 15,
-            'y': 0,
-        },
-    ]
+
+    Redshirts.events.officerIdle.add(this.createPatrol, this);
 }
 
 Redshirts.controllers.OfficerController.prototype = {
@@ -23,11 +15,17 @@ Redshirts.controllers.OfficerController.prototype = {
     spawn: function () {
         this.easystar = this.level.levelController.createPathfinding();
         const officerGraphic = Redshirts.debugGraphics.create(this.game, 0xFF0000, 16, 16);
-        this.officerLocations.forEach((loc) => {
-            this.officers.push(new Redshirts.entities.officer(this.game, this.level, officerGraphic,
-                                                              loc.x * this.level.levelController.tileWidth, 
-                                                              loc.y * this.level.levelController.tileHeight));
-        });
+
+        const [officerRoom,] = this.level.levelController.getRooms('bridge', 'lab');
+
+        for (var i = 0; i < this.num; i++) {
+            const loc = {
+                x: i * this.level.levelController.tileWidth + officerRoom.x, 
+                y: officerRoom.y,
+            }
+            this.officers.push(new Redshirts.entities.officer(this.game, this.level, officerGraphic, loc.x, loc.y));
+
+        }
     },
 
     // mechanism for patrol
@@ -40,20 +38,22 @@ Redshirts.controllers.OfficerController.prototype = {
         });
     },
 
+    createPatrol: function (officer) {
+        const [officerRoom, objectiveRoom, otherRooms] = this.level.levelController.getRooms('bridge', 'lab');
+        // random ordering of rooms
+        const patrolRooms = shuffle([officerRoom, objectiveRoom, ...sample(otherRooms, 2)]);
+        patrolRooms.forEach((room, i, arr) => {
+            let prevLoc = null;
+            if (i > 0) { 
+                prevLoc = arr[i - 1].midPoint; 
+            }
+            officer.enqueuePatrol(room, prevLoc);
+        });
+    },
+
     // mechanism for patrol
     createPatrols: function () {
-        const rooms = this.level.levelController.rooms;
-        const officerStartingRoom = rooms.filter((room) => { return room.name === "bridge"; })[0];
-        const objectiveRoom = rooms.filter((room) => { return room.name === "lab"; })[0];
-        const otherRooms = rooms.filter((room) => {
-            return room.name !== "lab" && room.name !== "bridge";
-        });
-
-        // officers get a subset of rooms to patrol between
-        // they move through the path
-        // once they are finished they go and rerandom the patrol
-
-
+        this.officers.forEach(this.createPatrol, this);
     },
 
     // start patrol

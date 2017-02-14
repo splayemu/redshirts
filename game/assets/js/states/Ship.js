@@ -8,8 +8,10 @@ Redshirts.states.Ship = function(game) {
                                                                      'assets/levels/ship.json', 
                                                                      'Tile Layer 1');
 
-    this.officerController = new Redshirts.controllers.OfficerController(this.game, this, 3);
+    this.officerController = new Redshirts.controllers.OfficerController(this.game, this, 1);
     this.ensignController = new Redshirts.controllers.EnsignController(this.game, this, 1);
+
+
 };
 
 Redshirts.states.Ship.prototype = {
@@ -36,7 +38,7 @@ Redshirts.states.Ship.prototype = {
 
         // create officers
         this.officerController.spawn();
-        this.officerController.addPatrol();
+        //this.officerController.createPatrols();
     },
 
     update: function() {

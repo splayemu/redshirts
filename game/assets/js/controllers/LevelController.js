@@ -64,6 +64,16 @@ Redshirts.controllers.LevelController.prototype = {
         }
     },
 
+    getRooms: function (officerRoomName, objectiveRoomName) {
+        const officerStartingRoom = this.rooms.filter((room) => { return room.name === officerRoomName; })[0];
+        const objectiveRoom = this.rooms.filter((room) => { return room.name === objectiveRoomName; })[0];
+        const otherRooms = this.rooms.filter((room) => {
+            return room.name !== officerRoomName && room.name !== objectiveRoomName;
+        });
+
+        return [officerStartingRoom, objectiveRoom, otherRooms];
+   },
+
     tileX: function (xInPx) {
         return Math.floor(xInPx / this.tileWidth);
     },
