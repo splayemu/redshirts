@@ -7,8 +7,10 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "move-phaser": "cp ./node_modules/phaser/build/phaser.js ./game/assets/js/lib/phaser.js",
     "move-easystar": "cp ./node_modules/easystarjs/bin/*min.js ./game/assets/js/lib/easystar.min.js",
-    "start-dev": "npm run move-phaser && npm run move-easystar && browser-sync start -s './game' -f './game'",
-    "start": "npm run move-phaser && http-server ./game"
+    "move-d3": "cp ./node_modules/d3-**/build/*min.js ./game/assets/js/lib/",
+    "move-all": "npm run move-phaser && npm run move-easystar && npm run move-d3",
+    "start-dev": "npm run move-all && browser-sync start -s './game' -f './game'",
+    "start": "npm run move-all && http-server ./game"
   },
   "author": "Spencer Apple (http://spencerapple.com/)",
   "license": "MIT",

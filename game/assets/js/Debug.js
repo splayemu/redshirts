@@ -1,12 +1,16 @@
-Redshirts.debug = function(flag, message) {
+Redshirts.debug = function(flag, message, color) {
     if (Redshirts.config.debug[flag]) {
-        console.log(message);
+        if (color) {
+            console.log(`%c ${message}`, `background: ${parseColor(color)}; color: white; display: block;`);
+        } else {
+            console.log(message);
+        }
     }
 }
 
 Redshirts.debugGraphics = {
     create: function (game, color, width, height) {
-        console.log('create', color, width, height);
+        console.log('createRect', color, width, height);
         const debugGraphics = game.add.graphics(0, 0);
         // doesn't seem to change anything
         //debugGraphics.boundsPadding = 0;
@@ -28,8 +32,8 @@ Redshirts.debugGraphics = {
         // doesn't seem to change anything
         //debugGraphics.boundsPadding = 0;
 
-        debugGraphics.lineStyle(2, color);
-        debugGraphics.beginFill(color, 0.5);
+        debugGraphics.lineStyle(1, color);
+        debugGraphics.beginFill(color, 1);
         debugGraphics.drawCircle(0, 0, radius);
         debugGraphics.endFill();
 

@@ -14,16 +14,22 @@ Redshirts.controllers.OfficerController.prototype = {
     // spawning
     spawn: function () {
         this.easystar = this.level.levelController.createPathfinding();
-        const officerGraphic = Redshirts.debugGraphics.create(this.game, 0xFF0000, 16, 16);
 
         const [officerRoom,] = this.level.levelController.getRooms('bridge', 'lab');
+
+        function colorScale (i, max) {
+            const percent = (i + 1) / (max + 1);
+            const color = d3.color(d3.interpolateBlues(percent));
+            console.log('colorScale', percent, color, color.toString()); 
+            return parseColor(rgbToHex(color), true);
+        }
 
         for (var i = 0; i < this.num; i++) {
             const loc = {
                 x: i * this.level.levelController.tileWidth + officerRoom.x, 
                 y: officerRoom.y,
             }
-            this.officers.push(new Redshirts.entities.officer(this.game, this.level, officerGraphic, loc.x, loc.y));
+            this.officers.push(new Redshirts.entities.officer(this.game, this.level, colorScale(i, this.num), loc.x, loc.y));
 
         }
     },
@@ -49,11 +55,6 @@ Redshirts.controllers.OfficerController.prototype = {
             }
             officer.enqueuePatrol(room, prevLoc);
         });
-    },
-
-    // mechanism for patrol
-    createPatrols: function () {
-        this.officers.forEach(this.createPatrol, this);
     },
 
     // start patrol
