@@ -64,10 +64,22 @@ Redshirts.controllers.LevelController.prototype = {
         }
     },
 
+    copyRoom: function (room) {
+        return {
+            name: room.name,
+            x: room.x,
+            y: room.y,
+            width: room.width,
+            height: room.height,
+            midPoint: room.midPoint,
+        }
+    },
+
     getRooms: function (officerRoomName, objectiveRoomName) {
-        const officerStartingRoom = this.rooms.filter((room) => { return room.name === officerRoomName; })[0];
-        const objectiveRoom = this.rooms.filter((room) => { return room.name === objectiveRoomName; })[0];
-        const otherRooms = this.rooms.filter((room) => {
+        const rooms = this.rooms.map(this.copyRoom);
+        const officerStartingRoom = rooms.filter((room) => { return room.name === officerRoomName; })[0];
+        const objectiveRoom = rooms.filter((room) => { return room.name === objectiveRoomName; })[0];
+        const otherRooms = rooms.filter((room) => {
             return room.name !== officerRoomName && room.name !== objectiveRoomName;
         });
 

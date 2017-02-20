@@ -33,7 +33,7 @@ Redshirts.debugGraphics = {
         //debugGraphics.boundsPadding = 0;
 
         debugGraphics.lineStyle(1, color);
-        debugGraphics.beginFill(color, 1);
+        debugGraphics.beginFill(color, 0.5);
         debugGraphics.drawCircle(0, 0, radius);
         debugGraphics.endFill();
 

@@ -8,7 +8,7 @@ Redshirts.states.Ship = function(game) {
                                                                      'assets/levels/ship.json', 
                                                                      'Tile Layer 1');
 
-    this.officerController = new Redshirts.controllers.OfficerController(this.game, this, 1);
+    this.officerController = new Redshirts.controllers.OfficerController(this.game, this, 2);
     this.ensignController = new Redshirts.controllers.EnsignController(this.game, this, 1);
 
 
