@@ -21,9 +21,10 @@ Redshirts.controllers.EnsignController.prototype = {
         this.easystar = this.level.levelController.createPathfinding();
         //const ensignGraphic = Redshirts.debugGraphics.create(this.game, 0xFF0000, 16, 16);
         this.ensignLocations.forEach((loc) => {
-            this.ensigns.push(new Redshirts.entities.Ensign(this.game, this.level, 
-                                                            loc.x * this.level.levelController.tileWidth, 
-                                                            loc.y * this.level.levelController.tileHeight));
+            this.ensigns.push(Redshirts.entities.createEnsign(this.game,
+                                                              this.level,
+                                                              loc.x * this.level.levelController.tileWidth, 
+                                                              loc.y * this.level.levelController.tileHeight));
         });
 
         this.selected = this.ensigns[0];

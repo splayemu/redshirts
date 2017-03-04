@@ -1,26 +1,4 @@
-Redshirts.entities.Ensign = function (game, level, startingX, startingY) {
-    this.game = game;
-    this.level = level;
-
-    this.speed = 150;
-    this.startingX = startingX;
-    this.startingY = startingY;
-
-    this.path = null;
-    this.tween = null;
-
-    this.debugColor = 0xFF0000;
-    this.debugPathEndTexture = Redshirts.debugGraphics.create(this.game, 
-                                                              this.debugColor, 
-                                                              this.level.levelController.tileWidth, 
-                                                              this.level.levelController.tileHeight);
-    this.debugSprite = null;
-
-    // The player and its settings
-    this.sprite = this.game.add.sprite(this.startingX, this.startingY, 'betty');
-}
-
-Redshirts.entities.Ensign.prototype = {
+Redshirts.entities.ensignPrototype = {
     update: function () {
         if (this.path !== null && this.path.length > 0) {
             if (this.tween === null) {
@@ -31,5 +9,41 @@ Redshirts.entities.Ensign.prototype = {
         } else if (this.path !== null && this.path.length === 0) {
             this.path = null;
         }
-    },
-}
+    }
+};
+
+Redshirts.entities.createEnsign = (function () {
+    let ensignID = 0;
+
+    return function (game, level, startingX, startingY) {
+
+        const debugColor = 0xFF0000;
+        // The player and its settings
+        //const sprite = Redshirts.debugGraphics.create(game, color, 16, 16);
+
+        const ensign = Object.assign(Object.create(Redshirts.entities.ensignPrototype), {
+                game: game,
+                level: level,
+
+                speed: 150,
+                startingX: startingX,
+                startingY: startingY,
+
+                path: null,
+                tween: null,
+
+                debugColor: debugColor, 
+                debugPathEndTexture: Redshirts.debugGraphics.create(game, 
+                                                                    debugColor, 
+                                                                    level.levelController.tileWidth, 
+                                                                    level.levelController.tileHeight),
+                debugSprite: null,
+
+                // The player and its settings
+                sprite: game.add.sprite(startingX, startingY, 'betty')
+        });
+
+        ensignID++;
+        return ensign;
+    };
+})();

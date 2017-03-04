@@ -1,4 +1,4 @@
-const officerPrototype = {
+Redshirts.entities.officerPrototype = {
     debug: function (msg) {
         Redshirts.debug('officers', `officer: ${this.id}, ${msg}`, this.color);
     },
@@ -80,7 +80,7 @@ Redshirts.entities.createOfficer = (function () {
         // The player and its settings
         const sprite = Redshirts.debugGraphics.create(game, color, 16, 16);
 
-        const officer = Object.assign(Object.create(officerPrototype), {
+        const officer = Object.assign(Object.create(Redshirts.entities.officerPrototype), {
             id: officerID,
             game: game,
             level: level,
