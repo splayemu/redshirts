@@ -72,7 +72,7 @@ Redshirts.controllers.LevelController.prototype = {
             width: room.width,
             height: room.height,
             midPoint: room.midPoint,
-        }
+        };
     },
 
     getRooms: function (officerRoomName, objectiveRoomName) {
@@ -99,7 +99,7 @@ Redshirts.controllers.LevelController.prototype = {
         return {
             x: this.tileX(loc.x),
             y: this.tileY(loc.y),
-        }
+        };
     },
 
     convertPx: function (loc) {
@@ -112,7 +112,7 @@ Redshirts.controllers.LevelController.prototype = {
     pxRound: function (loc) {
         return this.convertPx(this.convertTile(loc));
     },
-    
+
     createGround: function () {
         // draws the img
         this.map = this.game.add.tilemap(this.levelID, this.tileWidth, this.tileHeight);

@@ -1,42 +1,4 @@
-Redshirts.entities.officer = (function () {
-    let officerID = 0; 
-    
-    const officer = function (game, level, color, startingX, startingY) {
-        this.id = officerID++;
-
-        this.game = game;
-        this.level = level;
-        this.color = color; 
-
-        this.debug(`created with color ${color}`)
-
-        this.speed = 150;
-        this.startingX = startingX;
-        this.startingY = startingY;
-
-        this.path = [];
-        this.tween = null;
-
-        // The player and its settings
-        const sprite = Redshirts.debugGraphics.create(this.game, this.color, 16, 16);
-        this.sprite = this.game.add.sprite(this.startingX, this.startingY, sprite);
-
-        this.debugPathEndTexture = Redshirts.debugGraphics.createCircle(this.game, 
-                                                                        this.color, 
-                                                                        this.level.levelController.tileWidth / 4); 
-
-        this.pathSprites = [];
-        this.debugSprite = null;
-        this.waitTime = 100;
-        this.waiting = 0;
-
-        this.patrolQueue = [];
-    }
-
-    return officer;
-})();
-
-Redshirts.entities.officer.prototype = {
+const officerPrototype = {
     debug: function (msg) {
         Redshirts.debug('officers', `officer: ${this.id}, ${msg}`, this.color);
     },
@@ -58,7 +20,7 @@ Redshirts.entities.officer.prototype = {
                 const loc = this.path.shift();
                 this.tween = this.game.add.tween(this.sprite).to(loc, this.speed, null, true);
                 this.tween.onComplete.add((e) => { this.tween = null; }, this);
-            } 
+            }
         } else if (this.path.length === 0) {
             const nextRoom = this.peekPatrol();
             if (nextRoom) {
@@ -80,7 +42,7 @@ Redshirts.entities.officer.prototype = {
             return null;
         }
     },
-    
+
     dequeuePatrol: function () {
         const nextRoom = this.patrolQueue.shift();
         this.path = nextRoom.path;
@@ -108,4 +70,45 @@ Redshirts.entities.officer.prototype = {
             room.path = path;
         });
     },
-}
+};
+
+Redshirts.entities.createOfficer = (function () {
+    let officerID = 0; 
+
+    return function (game, level, color, startingX, startingY) {
+
+        // The player and its settings
+        const sprite = Redshirts.debugGraphics.create(game, color, 16, 16);
+
+        const officer = Object.assign(Object.create(officerPrototype), {
+            id: officerID,
+            game: game,
+            level: level,
+            color: color, 
+
+            speed: 150,
+            startingX: startingX,
+            startingY: startingY,
+
+            path: [],
+            tween: null,
+
+            sprite: game.add.sprite(startingX, startingY, sprite),
+
+            debugPathEndTexture: Redshirts.debugGraphics.createCircle(game, 
+                                                                      color, 
+                                                                      level.levelController.tileWidth / 4), 
+
+            pathSprites: [],
+            debugSprite: null,
+            waitTime: 100,
+            waiting: 0,
+
+            patrolQueue: [],
+        });
+
+        officerID++;
+        officer.debug(`created with color ${color}`);
+        return officer;
+    };
+})();

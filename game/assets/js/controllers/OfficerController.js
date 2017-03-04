@@ -6,7 +6,7 @@ Redshirts.controllers.OfficerController = function (game, level, num) {
     this.officers = [];
 
     Redshirts.events.officerIdle.add(this.createPatrol, this);
-}
+};
 
 Redshirts.controllers.OfficerController.prototype = {
     preload: function () {},
@@ -27,9 +27,13 @@ Redshirts.controllers.OfficerController.prototype = {
         for (var i = 0; i < this.num; i++) {
             const loc = {
                 x: i * this.level.levelController.tileWidth + officerRoom.x, 
-                y: officerRoom.y,
-            }
-            this.officers.push(new Redshirts.entities.officer(this.game, this.level, colorScale(i, this.num), loc.x, loc.y));
+                y: officerRoom.y
+            };
+            this.officers.push(Redshirts.entities.createOfficer(this.game,
+                                                                this.level,
+                                                                colorScale(i, this.num),
+                                                                loc.x,
+                                                                loc.y));
 
         }
     },
