@@ -4,28 +4,26 @@ Redshirts.controllers.EnsignController = function (game, level, num) {
     this.num = num;
 
     this.ensigns = [];
-    this.ensignLocations = [
-        {
-            'x': 4,
-            'y': 10,
-        },
-    ];
     this.selected = null;
-}
+};
 
 Redshirts.controllers.EnsignController.prototype = {
     preload: function () {},
 
-    // spawning
     spawn: function () {
         this.easystar = this.level.levelController.createPathfinding();
         //const ensignGraphic = Redshirts.debugGraphics.create(this.game, 0xFF0000, 16, 16);
-        this.ensignLocations.forEach((loc) => {
+        const [ensignRoom,] = this.level.levelController.getRooms('mess', 'lab');
+        for (var i = 0; i < this.num; i++) {
+            const loc = {
+                x: i * this.level.levelController.tileWidth + ensignRoom.x, 
+                y: ensignRoom.y
+            };
             this.ensigns.push(Redshirts.entities.createEnsign(this.game,
                                                               this.level,
-                                                              loc.x * this.level.levelController.tileWidth, 
-                                                              loc.y * this.level.levelController.tileHeight));
-        });
+                                                              loc.x,
+                                                              loc.y));
+        }
 
         this.selected = this.ensigns[0];
     },

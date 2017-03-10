@@ -8,7 +8,7 @@ Redshirts.controllers.LevelController = function (game, level, filename, layerNa
     this.json = 'shipjson';
     this.tileWidth = 32;
     this.tileHeight = 32;
-}
+};
 
 Redshirts.controllers.LevelController.prototype = {
     preload: function () {
@@ -75,15 +75,15 @@ Redshirts.controllers.LevelController.prototype = {
         };
     },
 
-    getRooms: function (officerRoomName, objectiveRoomName) {
+    getRooms: function (startingRoom, objectiveRoomName) {
         const rooms = this.rooms.map(this.copyRoom);
-        const officerStartingRoom = rooms.filter((room) => { return room.name === officerRoomName; })[0];
+        const entityStartingRoom = rooms.filter((room) => { return room.name === startingRoom; })[0];
         const objectiveRoom = rooms.filter((room) => { return room.name === objectiveRoomName; })[0];
         const otherRooms = rooms.filter((room) => {
-            return room.name !== officerRoomName && room.name !== objectiveRoomName;
+            return room.name !== startingRoom && room.name !== objectiveRoomName;
         });
 
-        return [officerStartingRoom, objectiveRoom, otherRooms];
+        return [entityStartingRoom, objectiveRoom, otherRooms];
    },
 
     tileX: function (xInPx) {
