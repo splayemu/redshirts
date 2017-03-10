@@ -1,11 +1,21 @@
 Redshirts
 ===
 
+A cat & mouse game inspired by John Scalzi's [Redshirts](https://www.amazon.com/Redshirts-Novel-Three-John-Scalzi/dp/1491514388).
+Play as a group of ensigns to avoid the officers as they try to recruit you for fatal away missions.
+
 ## Installation
     npm install
 
 ## Usage
     npm run start-dev
+    
+## Release Notes
+### 0.1.0 - Basic player and officer movement
+* Pathfinding with easystar.js
+* Officers patrol between rooms randomly
+* Click to move player
+* Designate rooms and walls via Tiled
 
 ## Making Maps
 1. Download and run [Tiled](http://www.mapeditor.org/)
