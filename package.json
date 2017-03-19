@@ -5,22 +5,28 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "start-dev": "npm run move-phaser && gulp",
+    "start": "npm run browserify && http-server ./game",
     "move-phaser": "cp ./node_modules/phaser/build/phaser.js ./game/assets/js/lib/phaser.js",
-    "move-easystar": "cp ./node_modules/easystarjs/bin/*min.js ./game/assets/js/lib/easystar.min.js",
-    "move-d3": "cp ./node_modules/d3-**/build/*min.js ./game/assets/js/lib/",
-    "move-all": "npm run move-phaser && npm run move-easystar && npm run move-d3",
-    "start-dev": "npm run move-all && browser-sync start -s './game' -f './game'",
-    "start": "npm run move-all && http-server ./game"
+    "browserify": "browserify ./game/assets/js/redshirts.js -o ./game/dest/bundle.js",
+    "watchify": "watchify ./game/assets/js/redshirts.js -o ./game/dest/bundle.js -dv"
   },
   "author": "Spencer Apple (http://spencerapple.com/)",
   "license": "MIT",
   "dependencies": {
+    "babelify": "^7.3.0",
+    "browserify": "^14.1.0",
     "d3-color": "^1.0.2",
     "d3-interpolate": "^1.1.3",
     "d3-scale-chromatic": "^1.1.1",
     "easystarjs": "^0.3.1",
+    "exorcist": "^0.4.0",
+    "gulp": "^3.9.1",
+    "gulp-util": "^3.0.8",
     "http-server": "^0.9.0",
-    "phaser": "^2.6.2"
+    "phaser": "^2.6.2",
+    "vinyl-source-stream": "^1.1.0",
+    "watchify": "^3.9.0"
   },
   "devDependencies": {
     "browser-sync": "^2.11.1"

@@ -1,4 +1,4 @@
-Redshirts.config = {
+module.exports = {
     /**
      * Use quickboot to quickly jump into a state, simply provide a string with the
      * registered state name
@@ -22,7 +22,7 @@ Redshirts.config = {
      * Some enable additional debugging features
      */
     debug: {
-        stateHooks: false,
+        stateHooks: true,
         grid: true,
         player: true,
         officers: true,

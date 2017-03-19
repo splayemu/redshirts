@@ -1,17 +1,19 @@
-Redshirts.states.Boot = function(game) {
-    Redshirts.debug('stateHooks', 'Boot.constructor');
+const debug = require('../debug.js');
+
+module.exports = function(game) {
+    debug.log('stateHooks', 'Boot.constructor');
     this.game = game;
 };
 
-Redshirts.states.Boot.prototype = {
+module.exports.prototype = {
     preload: function() {
-        Redshirts.debug('stateHooks', 'Boot.preload');
+        debug.log('stateHooks', 'Boot.preload');
         this.game.load.image('logo', 'phaser.png');
 
     },
 
     create: function() {
-        Redshirts.debug('stateHooks', 'Boot.create');
+        debug.log('stateHooks', 'Boot.create');
         this.scale.minWidth = 1000;
         this.scale.minHeight = 562;
         this.scale.pageAlignHorizontally = true;

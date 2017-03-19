@@ -1,11 +1,14 @@
-Redshirts.states.Preloader = function (game) {
-    Redshirts.debug('stateHooks', 'Preloader.constructor');
+const debug = require('../debug.js');
+const config = require('../config.js');
+
+module.exports = function (game) {
+    debug.log('stateHooks', 'Preloader.constructor');
 };
 
-Redshirts.states.Preloader.prototype = {
+module.exports.prototype = {
 
     preload: function () {
-        Redshirts.debug('stateHooks', 'Preloader.preload');
+        debug.log('stateHooks', 'Preloader.preload');
         this.game.load.spritesheet('dude', 'assets/img/dude.png', 32, 48);
         //opengameart.org/content/one-more-lpc-alternate-character
         this.game.load.spritesheet('betty', 'assets/spritesheets/betty.png', 32, 32, 8, 8);
@@ -14,12 +17,12 @@ Redshirts.states.Preloader.prototype = {
     },
 
     create: function () {
-        Redshirts.debug('stateHooks', 'Preloader.create');
+        debug.log('stateHooks', 'Preloader.create');
         //this.preloadBar.cropEnabled = false;
     },
 
     update: function () {
         //this.ready = true;
-        this.state.start(Redshirts.config.startState === null ? 'Ship' : Redshirts.config.startState);
+        this.state.start(config.startState === null ? 'Ship' : config.startState);
     },
 }

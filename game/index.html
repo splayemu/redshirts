@@ -3,50 +3,12 @@
     <head>
         <meta charset="UTF-8" />
         <title>Redshirts</title>
-
-        <script src="/assets/js/lib/phaser.js"></script>
-        <script src="/assets/js/lib/easystar.min.js"></script>
-        <script src="/assets/js/lib/d3-color.min.js"></script>
-        <script src="/assets/js/lib/d3-interpolate.min.js"></script>
-        <script src="/assets/js/lib/d3-scale-chromatic.min.js"></script>
-
-        <!--setup/-->
-        <script src="/assets/js/Redshirts.js"></script>
-        <script src="/assets/js/RunConfig.js"></script>
-        <script src="/assets/js/Debug.js"></script>
-        <script src="/assets/js/Events.js"></script>
-        <script src="/assets/js/utils/get-random-int.js"></script>
-        <script src="/assets/js/utils/parse-color.js"></script>
-        <!--controllers/-->
-        <script src="/assets/js/controllers/LevelController.js"></script>
-        <script src="/assets/js/controllers/OfficerController.js"></script>
-        <script src="/assets/js/controllers/EnsignController.js"></script>
-        <!--states/-->
-        <script src="/assets/js/states/Boot.js"></script>
-        <script src="/assets/js/states/Preloader.js"></script>
-        <!--levels/-->
-        <script src="/assets/js/states/Ship.js"></script>
-        <!--entities/-->
-        <script src="/assets/js/entities/Ensign.js"></script>
-        <script src="/assets/js/entities/Officer.js"></script>
-        <script src="/assets/js/entities/ui/PauseBox.js"></script>
-        <script src="/assets/js/entities/ui/TextBox.js"></script>
     </head>
     <body>
-
-    <script type="text/javascript">
-
-    window.onload = function() {
-        var game = new Phaser.Game(Redshirts.config.viewport.width, Redshirts.config.viewport.height, Phaser.CANVAS, '');
-
-        game.state.add('Boot', Redshirts.states.Boot);
-        game.state.add('Preloader', Redshirts.states.Preloader);
-        game.state.add('Ship', Redshirts.states.Ship);
-
-        game.state.start('Boot');
-    };
-
-    </script>
-
+        <header>
+            <h1>Redshirts</h1>
+        </header>
+        <script src="/assets/js/lib/phaser.js"></script>
+        <script src="/assets/js/dist/bundle.js"></script>
     </body>
 </html>

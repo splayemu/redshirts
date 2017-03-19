@@ -1,4 +1,4 @@
-Redshirts.states.Ship = function(game) {
+module.exports = function(game) {
     Redshirts.debug('stateHooks', 'Ship.constructor');
     this.game = game;
     this.player;
@@ -14,7 +14,7 @@ Redshirts.states.Ship = function(game) {
 
 };
 
-Redshirts.states.Ship.prototype = {
+module.exports.prototype = {
     preload: function() {
         Redshirts.debug('stateHooks', 'Ship.preload');
         this.levelController.preload();
