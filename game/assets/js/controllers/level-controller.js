@@ -1,4 +1,9 @@
-Redshirts.controllers.LevelController = function (game, level, filename, layerName) {
+const debug = require('../debug.js');
+const config = require('../config.js');
+const EasyStar = require('easystarjs');
+
+module.exports = function (game, level, filename, layerName) {
+    debug.log('stateHooks', 'level-controller.constructor');
     this.game = game;
     this.level = level;
     this.filename = filename;
@@ -10,8 +15,9 @@ Redshirts.controllers.LevelController = function (game, level, filename, layerNa
     this.tileHeight = 32;
 };
 
-Redshirts.controllers.LevelController.prototype = {
+module.exports.prototype = {
     preload: function () {
+        debug.log('stateHooks', 'level-controller.preload');
         this.game.load.tilemap(this.levelID, this.filename, null, Phaser.Tilemap.TILED_JSON);
         this.game.load.json(this.json, this.filename);
     },
@@ -28,7 +34,7 @@ Redshirts.controllers.LevelController.prototype = {
             for (let col = 0; col < layer.width; col++) {
                 newRow.push(layer.data[row * layer.height + col]);
 
-                if (Redshirts.config.debug.grid) {
+                if (config.debug.grid) {
                     if (layer.data[col + layer.height * row]) {
                         this.game.add.sprite(col * this.tileWidth, row * this.tileHeight, this.debugGridTexture);
                     }
@@ -53,9 +59,9 @@ Redshirts.controllers.LevelController.prototype = {
             };
         });
 
-        if (Redshirts.config.debug.grid) {
+        if (config.debug.grid) {
             this.rooms.forEach((room) => {
-                const roomTexture = Redshirts.debugGraphics.create(this.game, 0xFFFF00, room.width, room.height);
+                const roomTexture = debug.createSquare(this.game, 0xFFFF00, room.width, room.height);
                 this.game.add.sprite(room.x, room.y, roomTexture);
 
                 const style = { font: '18px Arial', fill: '#FFFFFF', align: 'left' };
@@ -120,7 +126,7 @@ Redshirts.controllers.LevelController.prototype = {
         this.map.createLayer(this.layerName);
 
         // debug textures
-        this.debugGridTexture = Redshirts.debugGraphics.create(this.game, 0xFFFF00, this.tileWidth, this.tileHeight);
+        this.debugGridTexture = debug.createSquare(this.game, 0xFFFF00, this.tileWidth, this.tileHeight);
 
         this._loadGrid();
         this._loadRooms();
@@ -128,6 +134,7 @@ Redshirts.controllers.LevelController.prototype = {
 
 
     createPathfinding: function () {
+        console.log(EasyStar);
         const easystar = new EasyStar.js();
         easystar.setGrid(this.grid);
 
@@ -145,7 +152,7 @@ Redshirts.controllers.LevelController.prototype = {
         // it returns null if the path is on an inaccessible block, but doesn't ever call if it's blocked off
         easystar.findPath(starting.x, starting.y, ending.x, ending.y, (path) => {
             if (path === null) {
-                Redshirts.debug('grid', `${start.x}, ${start.y} can't path to ${ending.x}, ${ending.y}`);
+                debug.log('grid', `${start.x}, ${start.y} can't path to ${ending.x}, ${ending.y}`);
             } else {
                 //console.groupCollapsed('player');
                 //console.log('new path found', entity.sprite.x, entity.sprite.y);
@@ -160,4 +167,4 @@ Redshirts.controllers.LevelController.prototype = {
             }
         });
     },
-}
+};

@@ -1,6 +1,10 @@
-Redshirts.entities.officerPrototype = {
+const config = require('../config.js');
+const debug = require('../debug.js');
+const events = require('../events.js');
+
+const officerPrototype = {
     debug: function (msg) {
-        Redshirts.debug('officers', `officer: ${this.id}, ${msg}`, this.color);
+        debug.log('officers', `officer: ${this.id}, ${msg}`, this.color);
     },
 
     update: function () {
@@ -26,9 +30,8 @@ Redshirts.entities.officerPrototype = {
             if (nextRoom) {
                 if (nextRoom.path) this.dequeuePatrol();
             } else {
-                //Redshirts.debug('officers', `officer: ${this.id}, officerIdle`, this.color);
                 this.debug('officerIdle');
-                Redshirts.events.officerIdle.dispatch(this);
+                events.officerIdle.dispatch(this);
             }
 
             this.waiting = this.waitTime;
@@ -46,7 +49,7 @@ Redshirts.entities.officerPrototype = {
     dequeuePatrol: function () {
         const nextRoom = this.patrolQueue.shift();
         this.path = nextRoom.path;
-        if (Redshirts.config.debug.officers) {
+        if (config.debug.officers) {
             const pathSprite = this.pathSprites.shift();
             // could change or animate sprite to be different
 
@@ -60,7 +63,7 @@ Redshirts.entities.officerPrototype = {
 
         this.debug(`enpatrolQueueRoom ${room.name} starting at (${loc.x}, ${loc.y})`);
 
-        if (Redshirts.config.debug.officers) {
+        if (config.debug.officers) {
             this.pathSprites.push(this.game.add.sprite(room.midPoint.x, room.midPoint.y, this.debugPathEndTexture));
         }
 
@@ -72,43 +75,42 @@ Redshirts.entities.officerPrototype = {
     },
 };
 
-Redshirts.entities.createOfficer = (function () {
-    let officerID = 0; 
 
-    return function (game, level, color, startingX, startingY) {
+let officerID = 0;
 
-        // The player and its settings
-        const sprite = Redshirts.debugGraphics.create(game, color, 16, 16);
+module.exports = function (game, level, color, startingX, startingY) {
 
-        const officer = Object.assign(Object.create(Redshirts.entities.officerPrototype), {
-            id: officerID,
-            game: game,
-            level: level,
-            color: color, 
+    // The player and its settings
+    const sprite = debug.createSquare(game, color, 16, 16);
 
-            speed: 150,
-            startingX: startingX,
-            startingY: startingY,
+    const officer = Object.assign(Object.create(officerPrototype), {
+        id: officerID,
+        game: game,
+        level: level,
+        color: color, 
 
-            path: [],
-            tween: null,
+        speed: 150,
+        startingX: startingX,
+        startingY: startingY,
 
-            sprite: game.add.sprite(startingX, startingY, sprite),
+        path: [],
+        tween: null,
 
-            debugPathEndTexture: Redshirts.debugGraphics.createCircle(game, 
-                                                                      color, 
-                                                                      level.levelController.tileWidth / 4), 
+        sprite: game.add.sprite(startingX, startingY, sprite),
 
-            pathSprites: [],
-            debugSprite: null,
-            waitTime: 100,
-            waiting: 0,
+        debugPathEndTexture: debug.createCircle(game, 
+                                                color, 
+                                                level.levelController.tileWidth / 4), 
 
-            patrolQueue: [],
-        });
+        pathSprites: [],
+        debugSprite: null,
+        waitTime: 100,
+        waiting: 0,
 
-        officerID++;
-        officer.debug(`created with color ${color}`);
-        return officer;
-    };
-})();
+        patrolQueue: [],
+    });
+
+    officerID++;
+    officer.debug(`created with color ${color}`);
+    return officer;
+};

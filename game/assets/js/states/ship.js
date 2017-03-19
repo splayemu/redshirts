@@ -1,27 +1,30 @@
+const debug = require('../debug.js');
+const LevelController = require('../controllers/level-controller.js');
+const OfficerController = require('../controllers/officer-controller.js');
+const EnsignController = require('../controllers/ensign-controller.js');
+
 module.exports = function(game) {
-    Redshirts.debug('stateHooks', 'Ship.constructor');
+    debug.log('stateHooks', 'Ship.constructor');
     this.game = game;
     this.player;
     this.platformGroup;
-    this.levelController = new Redshirts.controllers.LevelController(this.game, 
-                                                                     this, 
-                                                                     'assets/levels/ship.json', 
-                                                                     'Tile Layer 1');
+    this.levelController = new LevelController(this.game, 
+                                               this, 
+                                               'assets/levels/ship.json', 
+                                               'Tile Layer 1');
 
-    this.officerController = new Redshirts.controllers.OfficerController(this.game, this, 2);
-    this.ensignController = new Redshirts.controllers.EnsignController(this.game, this, 1);
-
-
+    this.officerController = new OfficerController(this.game, this, 2);
+    this.ensignController = new EnsignController(this.game, this, 1);
 };
 
 module.exports.prototype = {
     preload: function() {
-        Redshirts.debug('stateHooks', 'Ship.preload');
+        debug.log('stateHooks', 'Ship.preload');
         this.levelController.preload();
     },
 
     create: function() {
-        Redshirts.debug('stateHooks', 'Ship.create');
+        debug.log('stateHooks', 'Ship.create');
 
         this.tweens.frameBased = true;
         this.levelController.createGround();

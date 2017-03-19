@@ -1,14 +1,21 @@
-Redshirts.controllers.OfficerController = function (game, level, num) {
+const d3Color = require('d3-color');
+const d3ScaleChromatic = require('d3-scale-chromatic');
+
+const utils = require('../utils.js');
+const events = require('../events.js');
+const Officer = require('../entities/officer.js');
+
+module.exports = function (game, level, num) {
     this.game = game;
     this.level = level;
     this.num = num;
 
     this.officers = [];
 
-    Redshirts.events.officerIdle.add(this.createPatrol, this);
+    events.officerIdle.add(this.createPatrol, this);
 };
 
-Redshirts.controllers.OfficerController.prototype = {
+module.exports.prototype = {
     preload: function () {},
 
     // spawning
@@ -19,9 +26,9 @@ Redshirts.controllers.OfficerController.prototype = {
 
         function colorScale (i, max) {
             const percent = (i + 1) / (max + 1);
-            const color = d3.color(d3.interpolateBlues(percent));
+            const color = d3Color.color(d3ScaleChromatic.interpolateBlues(percent));
             console.log('colorScale', percent, color, color.toString()); 
-            return parseColor(rgbToHex(color), true);
+            return utils.parseColor(utils.rgbToHex(color), true);
         }
 
         for (var i = 0; i < this.num; i++) {
@@ -29,11 +36,12 @@ Redshirts.controllers.OfficerController.prototype = {
                 x: i * this.level.levelController.tileWidth + officerRoom.x, 
                 y: officerRoom.y
             };
-            this.officers.push(Redshirts.entities.createOfficer(this.game,
-                                                                this.level,
-                                                                colorScale(i, this.num),
-                                                                loc.x,
-                                                                loc.y));
+            console.log('spawning officer', Officer);
+            this.officers.push(Officer(this.game,
+                                       this.level,
+                                       colorScale(i, this.num),
+                                       loc.x,
+                                       loc.y));
 
         }
     },
@@ -51,7 +59,7 @@ Redshirts.controllers.OfficerController.prototype = {
     createPatrol: function (officer) {
         const [officerRoom, objectiveRoom, otherRooms] = this.level.levelController.getRooms('bridge', 'lab');
         // random ordering of rooms
-        const patrolRooms = shuffle([officerRoom, objectiveRoom, ...sample(otherRooms, 2)]);
+        const patrolRooms = utils.shuffle([officerRoom, objectiveRoom, ...utils.sample(otherRooms, 2)]);
         patrolRooms.forEach((room, i, arr) => {
             let prevLoc = null;
             if (i > 0) { 

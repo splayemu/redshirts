@@ -31,12 +31,325 @@ module.exports = {
 };
 
 },{}],2:[function(require,module,exports){
+const debug = require('../debug.js');
+const config = require('../config.js');
+const Ensign = require('../entities/ensign.js');
+
+module.exports = function (game, level, num) {
+    this.game = game;
+    this.level = level;
+    this.num = num;
+
+    this.ensigns = [];
+    this.selected = null;
+};
+
+module.exports.prototype = {
+    preload: function () {},
+
+    spawn: function () {
+        this.easystar = this.level.levelController.createPathfinding();
+        //const ensignGraphic = debug.createSquare(this.game, 0xFF0000, 16, 16);
+        const [ensignRoom] = this.level.levelController.getRooms('mess', 'lab');
+        for (var i = 0; i < this.num; i++) {
+            const loc = {
+                x: i * this.level.levelController.tileWidth + ensignRoom.x,
+                y: ensignRoom.y
+            };
+            this.ensigns.push(Ensign(this.game, this.level, loc.x, loc.y));
+        }
+
+        this.selected = this.ensigns[0];
+    },
+
+    pathTo: function (e) {
+        const x = this.game.input.mousePointer.x + this.game.camera.x;
+        const y = this.game.input.mousePointer.y + this.game.camera.y;
+        console.log(config.debug.player, this, 'mousedown', x, y);
+
+        const loc = this.level.levelController.pxRound({ x: x, y: y });
+
+        if (config.debug.player) {
+            if (this.selected.debugSprite) this.selected.debugSprite.destroy();
+            this.selected.debugSprite = this.game.add.sprite(loc.x, loc.y, this.selected.debugPathEndTexture);
+        }
+
+        this.level.levelController.addPath(this.easystar, this.selected.sprite, loc, path => {
+            this.selected.path = path;
+        });
+    },
+
+    getPlayer: function () {
+        return this.selected;
+    },
+
+    update: function () {
+        this.easystar.calculate();
+        this.ensigns.forEach(ensign => {
+            ensign.update();
+        });
+    }
+};
+
+},{"../config.js":1,"../debug.js":5,"../entities/ensign.js":6}],3:[function(require,module,exports){
+const debug = require('../debug.js');
+const config = require('../config.js');
+const EasyStar = require('easystarjs');
+
+module.exports = function (game, level, filename, layerName) {
+    debug.log('stateHooks', 'level-controller.constructor');
+    this.game = game;
+    this.level = level;
+    this.filename = filename;
+    this.layerName = layerName;
+    this.levelID = 'ship';
+    this.walls = 'walls';
+    this.json = 'shipjson';
+    this.tileWidth = 32;
+    this.tileHeight = 32;
+};
+
+module.exports.prototype = {
+    preload: function () {
+        debug.log('stateHooks', 'level-controller.preload');
+        this.game.load.tilemap(this.levelID, this.filename, null, Phaser.Tilemap.TILED_JSON);
+        this.game.load.json(this.json, this.filename);
+    },
+
+    _loadGrid: function () {
+        // can also look for a tilelayer
+        const layer = this.game.cache.getJSON(this.json).layers[0];
+        const grid = [];
+
+        for (let row = 0; row < layer.height; row++) {
+            const newRow = [];
+            grid.push(newRow);
+
+            for (let col = 0; col < layer.width; col++) {
+                newRow.push(layer.data[row * layer.height + col]);
+
+                if (config.debug.grid) {
+                    if (layer.data[col + layer.height * row]) {
+                        this.game.add.sprite(col * this.tileWidth, row * this.tileHeight, this.debugGridTexture);
+                    }
+                }
+            }
+        }
+
+        this.grid = grid;
+        this.gridWidth = layer.width;
+        this.gridHeight = layer.height;
+    },
+
+    _loadRooms: function () {
+        this.rooms = this.game.cache.getJSON(this.json).layers.filter(layer => {
+            return layer.name === "rooms";
+        })[0].objects;
+
+        this.rooms.forEach(room => {
+            room.midPoint = {
+                x: room.x + room.width / 2,
+                y: room.y + room.height / 2
+            };
+        });
+
+        if (config.debug.grid) {
+            this.rooms.forEach(room => {
+                const roomTexture = debug.createSquare(this.game, 0xFFFF00, room.width, room.height);
+                this.game.add.sprite(room.x, room.y, roomTexture);
+
+                const style = { font: '18px Arial', fill: '#FFFFFF', align: 'left' };
+                this.game.add.text(room.x, room.y, room.name, style);
+            });
+        }
+    },
+
+    copyRoom: function (room) {
+        return {
+            name: room.name,
+            x: room.x,
+            y: room.y,
+            width: room.width,
+            height: room.height,
+            midPoint: room.midPoint
+        };
+    },
+
+    getRooms: function (startingRoom, objectiveRoomName) {
+        const rooms = this.rooms.map(this.copyRoom);
+        const entityStartingRoom = rooms.filter(room => {
+            return room.name === startingRoom;
+        })[0];
+        const objectiveRoom = rooms.filter(room => {
+            return room.name === objectiveRoomName;
+        })[0];
+        const otherRooms = rooms.filter(room => {
+            return room.name !== startingRoom && room.name !== objectiveRoomName;
+        });
+
+        return [entityStartingRoom, objectiveRoom, otherRooms];
+    },
+
+    tileX: function (xInPx) {
+        return Math.floor(xInPx / this.tileWidth);
+    },
+
+    tileY: function (yInPx) {
+        return Math.floor(yInPx / this.tileHeight);
+    },
+
+    convertTile: function (loc) {
+        return {
+            x: this.tileX(loc.x),
+            y: this.tileY(loc.y)
+        };
+    },
+
+    convertPx: function (loc) {
+        return {
+            x: loc.x * this.tileWidth,
+            y: loc.y * this.tileHeight
+        };
+    },
+
+    pxRound: function (loc) {
+        return this.convertPx(this.convertTile(loc));
+    },
+
+    createGround: function () {
+        // draws the img
+        this.map = this.game.add.tilemap(this.levelID, this.tileWidth, this.tileHeight);
+        this.map.addTilesetImage('background');
+        this.map.createLayer(this.layerName);
+
+        // debug textures
+        this.debugGridTexture = debug.createSquare(this.game, 0xFFFF00, this.tileWidth, this.tileHeight);
+
+        this._loadGrid();
+        this._loadRooms();
+    },
+
+    createPathfinding: function () {
+        console.log(EasyStar);
+        const easystar = new EasyStar.js();
+        easystar.setGrid(this.grid);
+
+        // default to everything but the walls
+        easystar.setAcceptableTiles([0]);
+        easystar.setIterationsPerCalculation(100);
+
+        return easystar;
+    },
+
+    addPath: function (easystar, start, end, callback) {
+        const starting = this.convertTile(start);
+        const ending = this.convertTile(end);
+
+        // it returns null if the path is on an inaccessible block, but doesn't ever call if it's blocked off
+        easystar.findPath(starting.x, starting.y, ending.x, ending.y, path => {
+            if (path === null) {
+                debug.log('grid', `${start.x}, ${start.y} can't path to ${ending.x}, ${ending.y}`);
+            } else {
+                //console.groupCollapsed('player');
+                //console.log('new path found', entity.sprite.x, entity.sprite.y);
+                //console.log('first location', path[0]);
+                //console.groupEnd('player');
+
+                callback(path.map(loc => {
+                    loc.x *= this.tileWidth;
+                    loc.y *= this.tileHeight;
+                    return loc;
+                }));
+            }
+        });
+    }
+};
+
+},{"../config.js":1,"../debug.js":5,"easystarjs":17}],4:[function(require,module,exports){
+const d3Color = require('d3-color');
+const d3ScaleChromatic = require('d3-scale-chromatic');
+
+const utils = require('../utils.js');
+const events = require('../events.js');
+const Officer = require('../entities/officer.js');
+
+module.exports = function (game, level, num) {
+    this.game = game;
+    this.level = level;
+    this.num = num;
+
+    this.officers = [];
+
+    events.officerIdle.add(this.createPatrol, this);
+};
+
+module.exports.prototype = {
+    preload: function () {},
+
+    // spawning
+    spawn: function () {
+        this.easystar = this.level.levelController.createPathfinding();
+
+        const [officerRoom] = this.level.levelController.getRooms('bridge', 'lab');
+
+        function colorScale(i, max) {
+            const percent = (i + 1) / (max + 1);
+            const color = d3Color.color(d3ScaleChromatic.interpolateBlues(percent));
+            console.log('colorScale', percent, color, color.toString());
+            return utils.parseColor(utils.rgbToHex(color), true);
+        }
+
+        for (var i = 0; i < this.num; i++) {
+            const loc = {
+                x: i * this.level.levelController.tileWidth + officerRoom.x,
+                y: officerRoom.y
+            };
+            console.log('spawning officer', Officer);
+            this.officers.push(Officer(this.game, this.level, colorScale(i, this.num), loc.x, loc.y));
+        }
+    },
+
+    // mechanism for patrol
+    addPatrol: function () {
+        this.officers.forEach(officer => {
+            for (var i = 1; i < 4; i++) {
+                const loc = { x: officer.sprite.x, y: officer.sprite.y + i * this.level.levelController.tileHeight * 5 };
+                officer.enqueuePatrol(loc);
+            }
+        });
+    },
+
+    createPatrol: function (officer) {
+        const [officerRoom, objectiveRoom, otherRooms] = this.level.levelController.getRooms('bridge', 'lab');
+        // random ordering of rooms
+        const patrolRooms = utils.shuffle([officerRoom, objectiveRoom, ...utils.sample(otherRooms, 2)]);
+        patrolRooms.forEach((room, i, arr) => {
+            let prevLoc = null;
+            if (i > 0) {
+                prevLoc = arr[i - 1].midPoint;
+            }
+            officer.enqueuePatrol(room, prevLoc);
+        });
+    },
+
+    // start patrol
+    update: function () {
+        this.easystar.calculate();
+        this.officers.forEach(officer => {
+            officer.update();
+        });
+    }
+
+};
+
+},{"../entities/officer.js":7,"../events.js":8,"../utils.js":13,"d3-color":14,"d3-scale-chromatic":16}],5:[function(require,module,exports){
 const config = require('./config.js');
+const utils = require('./utils.js');
 
 module.exports.log = function (flag, message, color) {
     if (config.debug[flag]) {
         if (color) {
-            console.log(`%c ${message}`, `background: ${parseColor(color)}; color: white; display: block;`);
+            console.log(`%c ${message}`, `background: ${utils.parseColor(color)}; color: white; display: block;`);
         } else {
             console.log(message);
         }
@@ -75,7 +388,175 @@ module.exports.createCircle = function (game, color, radius) {
     return debugGraphicsTexture;
 };
 
-},{"./config.js":1}],3:[function(require,module,exports){
+},{"./config.js":1,"./utils.js":13}],6:[function(require,module,exports){
+const debug = require('../debug.js');
+
+const ensignPrototype = {
+    update: function () {
+        if (this.path !== null && this.path.length > 0) {
+            if (this.tween === null) {
+                const loc = this.path.shift();
+                this.tween = this.game.add.tween(this.sprite).to(loc, this.speed, null, true);
+                this.tween.onComplete.add(e => {
+                    this.tween = null;
+                }, this);
+            }
+        } else if (this.path !== null && this.path.length === 0) {
+            this.path = null;
+        }
+    }
+};
+
+let ensignID = 0;
+
+module.exports = function (game, level, startingX, startingY) {
+    const debugColor = 0xFF0000;
+    // The player and its settings
+    //const sprite = Redshirts.debugGraphics.create(game, color, 16, 16);
+
+    const ensign = Object.assign(Object.create(ensignPrototype), {
+        game: game,
+        level: level,
+
+        speed: 150,
+        startingX: startingX,
+        startingY: startingY,
+
+        path: null,
+        tween: null,
+
+        debugColor: debugColor,
+        debugPathEndTexture: debug.createSquare(game, debugColor, level.levelController.tileWidth, level.levelController.tileHeight),
+        debugSprite: null,
+
+        // The player and its settings
+        sprite: game.add.sprite(startingX, startingY, 'betty')
+    });
+
+    ensignID++;
+    return ensign;
+};
+
+},{"../debug.js":5}],7:[function(require,module,exports){
+const config = require('../config.js');
+const debug = require('../debug.js');
+const events = require('../events.js');
+
+const officerPrototype = {
+    debug: function (msg) {
+        debug.log('officers', `officer: ${this.id}, ${msg}`, this.color);
+    },
+
+    update: function () {
+        // depatrolQueue patrol item
+
+        if (this.waiting) {
+            this.waiting -= 1;
+        } else {
+            // if nothing to do, idle
+            this._move();
+        }
+    },
+
+    _move: function () {
+        if (this.path.length > 0) {
+            if (this.tween === null) {
+                const loc = this.path.shift();
+                this.tween = this.game.add.tween(this.sprite).to(loc, this.speed, null, true);
+                this.tween.onComplete.add(e => {
+                    this.tween = null;
+                }, this);
+            }
+        } else if (this.path.length === 0) {
+            const nextRoom = this.peekPatrol();
+            if (nextRoom) {
+                if (nextRoom.path) this.dequeuePatrol();
+            } else {
+                this.debug('officerIdle');
+                events.officerIdle.dispatch(this);
+            }
+
+            this.waiting = this.waitTime;
+        }
+    },
+
+    peekPatrol: function () {
+        if (this.patrolQueue.length > 0) {
+            return this.patrolQueue[0];
+        } else {
+            return null;
+        }
+    },
+
+    dequeuePatrol: function () {
+        const nextRoom = this.patrolQueue.shift();
+        this.path = nextRoom.path;
+        if (config.debug.officers) {
+            const pathSprite = this.pathSprites.shift();
+            // could change or animate sprite to be different
+        }
+
+        this.debug(`depatrolQueuePatrol ${nextRoom.name}: ${this.path[this.path.length - 1].x}, ${this.path[this.path.length - 1].y}`);
+    },
+
+    enqueuePatrol: function (room, prevLoc) {
+        const loc = this.level.levelController.pxRound(prevLoc || this.sprite);
+
+        this.debug(`enpatrolQueueRoom ${room.name} starting at (${loc.x}, ${loc.y})`);
+
+        if (config.debug.officers) {
+            this.pathSprites.push(this.game.add.sprite(room.midPoint.x, room.midPoint.y, this.debugPathEndTexture));
+        }
+
+        this.patrolQueue.push(room);
+
+        this.level.levelController.addPath(this.level.officerController.easystar, loc, room.midPoint, path => {
+            room.path = path;
+        });
+    }
+};
+
+let officerID = 0;
+
+module.exports = function (game, level, color, startingX, startingY) {
+
+    // The player and its settings
+    const sprite = debug.createSquare(game, color, 16, 16);
+
+    const officer = Object.assign(Object.create(officerPrototype), {
+        id: officerID,
+        game: game,
+        level: level,
+        color: color,
+
+        speed: 150,
+        startingX: startingX,
+        startingY: startingY,
+
+        path: [],
+        tween: null,
+
+        sprite: game.add.sprite(startingX, startingY, sprite),
+
+        debugPathEndTexture: debug.createCircle(game, color, level.levelController.tileWidth / 4),
+
+        pathSprites: [],
+        debugSprite: null,
+        waitTime: 100,
+        waiting: 0,
+
+        patrolQueue: []
+    });
+
+    officerID++;
+    officer.debug(`created with color ${color}`);
+    return officer;
+};
+
+},{"../config.js":1,"../debug.js":5,"../events.js":8}],8:[function(require,module,exports){
+module.exports.officerIdle = new Phaser.Signal();
+
+},{}],9:[function(require,module,exports){
 
 const d3Interpolate = require('d3-interpolate');
 const d3Color = require('d3-color');
@@ -109,7 +590,7 @@ window.onload = function () {
     game.state.start('Boot');
 };
 
-},{"./config.js":1,"./states/boot.js":4,"./states/preloader.js":5,"./states/ship.js":6,"d3-color":7,"d3-interpolate":8,"d3-scale-chromatic":9,"easystarjs":10}],4:[function(require,module,exports){
+},{"./config.js":1,"./states/boot.js":10,"./states/preloader.js":11,"./states/ship.js":12,"d3-color":14,"d3-interpolate":15,"d3-scale-chromatic":16,"easystarjs":17}],10:[function(require,module,exports){
 const debug = require('../debug.js');
 
 module.exports = function (game) {
@@ -138,7 +619,7 @@ module.exports.prototype = {
     }
 };
 
-},{"../debug.js":2}],5:[function(require,module,exports){
+},{"../debug.js":5}],11:[function(require,module,exports){
 const debug = require('../debug.js');
 const config = require('../config.js');
 
@@ -167,26 +648,31 @@ module.exports.prototype = {
     }
 };
 
-},{"../config.js":1,"../debug.js":2}],6:[function(require,module,exports){
+},{"../config.js":1,"../debug.js":5}],12:[function(require,module,exports){
+const debug = require('../debug.js');
+const LevelController = require('../controllers/level-controller.js');
+const OfficerController = require('../controllers/officer-controller.js');
+const EnsignController = require('../controllers/ensign-controller.js');
+
 module.exports = function (game) {
-    Redshirts.debug('stateHooks', 'Ship.constructor');
+    debug.log('stateHooks', 'Ship.constructor');
     this.game = game;
     this.player;
     this.platformGroup;
-    this.levelController = new Redshirts.controllers.LevelController(this.game, this, 'assets/levels/ship.json', 'Tile Layer 1');
+    this.levelController = new LevelController(this.game, this, 'assets/levels/ship.json', 'Tile Layer 1');
 
-    this.officerController = new Redshirts.controllers.OfficerController(this.game, this, 2);
-    this.ensignController = new Redshirts.controllers.EnsignController(this.game, this, 1);
+    this.officerController = new OfficerController(this.game, this, 2);
+    this.ensignController = new EnsignController(this.game, this, 1);
 };
 
 module.exports.prototype = {
     preload: function () {
-        Redshirts.debug('stateHooks', 'Ship.preload');
+        debug.log('stateHooks', 'Ship.preload');
         this.levelController.preload();
     },
 
     create: function () {
-        Redshirts.debug('stateHooks', 'Ship.create');
+        debug.log('stateHooks', 'Ship.create');
 
         this.tweens.frameBased = true;
         this.levelController.createGround();
@@ -217,7 +703,69 @@ module.exports.prototype = {
     }
 };
 
-},{}],7:[function(require,module,exports){
+},{"../controllers/ensign-controller.js":2,"../controllers/level-controller.js":3,"../controllers/officer-controller.js":4,"../debug.js":5}],13:[function(require,module,exports){
+module.exports.parseColor = function (color, toNumber) {
+    if (toNumber === true) {
+        if (typeof color === 'number') {
+            return color | 0; //chop off decimal
+        }
+        if (typeof color === 'string' && color[0] === '#') {
+            color = color.slice(1);
+        }
+        return window.parseInt(color, 16);
+    } else {
+        if (typeof color === 'number') {
+            //make sure our hexadecimal number is padded out
+            color = '#' + ('00000' + (color | 0).toString(16)).substr(-6);
+        }
+
+        return color;
+    }
+};
+
+function componentToHex(c) {
+    var hex = c.toString(16);
+    return hex.length == 1 ? "0" + hex : hex;
+};
+
+module.exports.rgbToHex = function (color) {
+    const colorString = "#" + componentToHex(color.r) + componentToHex(color.g) + componentToHex(color.b);
+    return colorString;
+};
+
+module.exports.getRandomInt = function (min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min)) + min;
+};
+
+module.exports.shuffle = function (array) {
+    let counter = array.length;
+
+    // While there are elements in the array
+    while (counter > 0) {
+        // Pick a random index
+        let index = Math.floor(Math.random() * counter);
+
+        // Decrease counter by 1
+        counter--;
+
+        // And swap the last element with it
+        let temp = array[counter];
+        array[counter] = array[index];
+        array[index] = temp;
+    }
+
+    return array;
+};
+
+module.exports.sample = function (array, size) {
+    array = module.exports.shuffle(array);
+
+    return array.slice(0, size);
+};
+
+},{}],14:[function(require,module,exports){
 // https://d3js.org/d3-color/ Version 1.0.2. Copyright 2016 Mike Bostock.
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
@@ -742,7 +1290,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 })));
 
-},{}],8:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 // https://d3js.org/d3-interpolate/ Version 1.1.3. Copyright 2017 Mike Bostock.
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('d3-color')) :
@@ -1289,7 +1837,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 })));
 
-},{"d3-color":7}],9:[function(require,module,exports){
+},{"d3-color":14}],16:[function(require,module,exports){
 // https://d3js.org/d3-scale-chromatic/ Version 1.1.1. Copyright 2017 Mike Bostock.
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('d3-interpolate')) :
@@ -1732,7 +2280,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 })));
 
-},{"d3-interpolate":8}],10:[function(require,module,exports){
+},{"d3-interpolate":15}],17:[function(require,module,exports){
 /**
 *   EasyStar.js
 *   github.com/prettymuchbryce/EasyStarJS
@@ -2260,7 +2808,7 @@ EasyStar.BOTTOM_LEFT = 'BOTTOM_LEFT'
 EasyStar.LEFT = 'LEFT'
 EasyStar.TOP_LEFT = 'TOP_LEFT'
 
-},{"./instance":11,"./node":12,"heap":13}],11:[function(require,module,exports){
+},{"./instance":18,"./node":19,"heap":20}],18:[function(require,module,exports){
 /**
  * Represents a single instance of EasyStar.
  * A path that is in the queue to eventually be found.
@@ -2276,7 +2824,7 @@ module.exports = function() {
     this.nodeHash = {};
     this.openList;
 };
-},{}],12:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 /**
 * A simple Node that represents a single tile on the grid.
 * @param {Object} parent The parent node.
@@ -2299,10 +2847,10 @@ module.exports = function(parent, x, y, costSoFar, simpleDistanceToTarget) {
         return this.costSoFar + this.simpleDistanceToTarget;
     }
 };
-},{}],13:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 module.exports = require('./lib/heap');
 
-},{"./lib/heap":14}],14:[function(require,module,exports){
+},{"./lib/heap":21}],21:[function(require,module,exports){
 // Generated by CoffeeScript 1.8.0
 (function() {
   var Heap, defaultCmp, floor, heapify, heappop, heappush, heappushpop, heapreplace, insort, min, nlargest, nsmallest, updateItem, _siftdown, _siftup;
@@ -2679,5 +3227,5 @@ module.exports = require('./lib/heap');
 
 }).call(this);
 
-},{}]},{},[3])
+},{}]},{},[9])
 //# sourceMappingURL=bundle.js.map

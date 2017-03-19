@@ -1,9 +1,10 @@
 const config = require('./config.js');
+const utils = require('./utils.js');
 
 module.exports.log = function(flag, message, color) {
     if (config.debug[flag]) {
         if (color) {
-            console.log(`%c ${message}`, `background: ${parseColor(color)}; color: white; display: block;`);
+            console.log(`%c ${message}`, `background: ${utils.parseColor(color)}; color: white; display: block;`);
         } else {
             console.log(message);
         }
